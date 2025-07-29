@@ -1,4 +1,4 @@
- Use a Python 3.12.3 Alpine base image
+# Use a Python 3.12.3 Alpine base image
 FROM python:3.12-alpine3.20
 
 # Set the working directory
