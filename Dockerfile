@@ -1,37 +1,18 @@
-# Use a Python 3.12.3 Alpine base image
-FROM python:3.12-alpine3.20
+FROM python:3.9.7-slim-buster
 
-# Set the working directory
+# Set working directory inside container
 WORKDIR /app
 
-# Copy all files from the current directory to the container's /app directory
+# Install required system packages
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git wget pv jq python3-dev ffmpeg mediainfo \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Copy all project files into the container
 COPY . .
 
-# Install necessary dependencies
-RUN apk add --no-cache \
-    gcc \
-    libffi-dev \
-    musl-dev \
-    ffmpeg \
-    aria2 \
-    make \
-    g++ \
-    cmake && \
-    wget -q https://github.com/axiomatic-systems/Bento4/archive/v1.6.0-639.zip && \
-    unzip v1.6.0-639.zip && \
-    cd Bento4-1.6.0-639 && \
-    mkdir build && \
-    cd build && \
-    cmake .. && \
-    make -j$(nproc) && \
-    cp mp4decrypt /usr/local/bin/ &&\
-    cd ../.. && \
-    rm -rf Bento4-1.6.0-639 v1.6.0-639.zip
-
 # Install Python dependencies
-RUN pip3 install --no-cache-dir --upgrade pip \
-    && pip3 install --no-cache-dir --upgrade -r sainibots.txt \
-    && python3 -m pip install -U yt-dlp
+RUN pip3 install --no-cache-dir -r requirements.txt
 
-# Set the command to run the application
-CMD ["sh", "-c", "gunicorn app:app & python3 main.py"] 
+# Run both Gunicorn and main.py in a proper way using a shell
+CMD bash -c "gunicorn app:app & python3 main.py"
